@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>My BCIT Project</title>
+    <meta name="comp1800 template" content="my bcit Hiking App project">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <!-- Optional styles and scripts of your own -->
+    <link type="text/css" href="styles/my_style.css">
+
+    <!-- Bootstrap FirebaseUI CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <!-- Firebase 8 CDNs-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/ui/4.8.1/firebase-ui-auth.js"></script>
+
+    <!-- Link to the api keys for your firebase project -->
+    <script src="/scripts/firebaseAPI_TEAM99.js"></script>
+
+</head>
+
+<body>
+
+    <!-------------------------------------->
+    <!-- The following is HTML for layout -->
+    <!-------------------------------------->
+    <nav class="navbar navbar-expand-lg navbar-light bg-info">
+        <div class="container-fluid">
+            <a class="navbar-brand">Hiking App</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="login.html">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Navigate</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Saved</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="profile.html">Profile</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Templates for general use, not displayed -->
+    <template id="CardTemplate">
+        <div class="card py-2 mx-2" style="width: 18rem;">
+            <img class="card-image card-img-top" src=" ..." alt="...">
+            <div class="card-body">
+                <h5 class="card-title">Card title</h5>
+                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the
+                    card's content.</p>
+                <a class="card-href btn btn-primary" href="#">Get Details</a>
+            </div>
+        </div>
+    </template>
+
+    <div class="container">
+        <h1>Your Hike gallery</h1>
+        <!-- Here is container for cards  -->
+        <div class="container">
+            <div id="hikes-go-here" class="row row-cols-auto">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Your Hero gallery</h1>
+        <!-- Here is container for cards  -->
+        <div class="container">
+            <div id="heros-go-here" class="row row-cols-auto">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Your Country gallery</h1>
+        <!-- Here is container for cards  -->
+        <div class="container">
+            <div id="countries-go-here" class="row row-cols-auto">
+
+            </div>
+        </div>
+    </div>
+
+    <!--------------------------------------------------------------------->
+    <!-- JS files: Your own JavaScript functions included here    -->
+    <!--------------------------------------------------------------------->
+    <script>
+        //-----------------------------------------------
+        // Create a "max" number of hike document objects
+        //-----------------------------------------------
+        function writeHikeData() {
+            max = 21;
+            //define a variable for the collection you want to create in Firestore to populate data
+            var hikesRef = db.collection("hikes");
+            for (i = 1; i <= max; i++) {
+                hikesRef.add({ //add to database, autogen ID
+                    code: "id" + i,
+                    name: "hike" + i,
+                    details: "Jason says this hike is amazing!  You will love going on the hike called hike#"
+                })
+            }
+        }
+
+        // ------------------------------------------------------
+        // Get data from a CSV file with ".fetch()"
+        // Since this file is local, you must use "live serve"
+        // ------------------------------------------------------
+        async function getCSVdata() {
+            const response = await fetch('./olympic-medals.csv'); //send get request
+            const data = await response.text(); //get file response
+            const list = data.split('\n').slice(1); //get line
+            list.forEach(row => {
+                let columns = row.split(','); //get token 
+                let country = columns[0]; //country name
+                let gold = columns[1]; //gold medals
+                let silver = columns[2];
+                let bronze = columns[3];
+                let details = "Jason is super proud of ";
+                details += country + ": " + gold + " gold;" + silver + " silver;" + bronze + "bronze."
+                if (country.includes("B")) {
+                    console.log(country);
+                    db.collection("countries").add({ //write to firestore
+                        name: country,
+                        details: details
+                    })
+                }
+            })
+        }
+
+        // async function readCityData() {
+
+        //         // Issue a get request via fetch command
+        //         const response = await fetch(https,//opendata.vancouver.ca/pages/home/);
+
+        //             // Wait for fetch response text to come back
+        //             const data = await response.text();
+
+        //             // Convert text string to JSON object
+        //             const json = JSON.parse(data);
+
+        //             // Now, extract the data you want from the JSON, to save into Firestore
+        //             // Cycle through any subcollections with "for" loop
+        //             // "x of list" returns the value;   
+        //             // "x in list" returns fields
+        //             //for (x of json.records) {
+        //             //console.log(x.fields.merged_address);
+        //             //console.log(x.fields.name);
+
+        //             db.collection("stuff").add({
+        //                 name: name,
+        //                 details: details
+        //                 })
+        //             // }
+        //         }
+
+        async function readJSONhero() {
+            const response = await fetch(
+                'https://cdn.jsdelivr.net/gh/akabab/superhero-api@0.3.0/api/all.json'
+            )
+            const data = await response.text(); //get text file, string
+            const superHeroes = JSON.parse(data); //convert to JSON
+            // console.log(superHeroes);
+            for (x of superHeroes) { //iterate thru each hero
+                let name = x.name;
+                //console.log(name);
+                let details = "Jason is impressed! " + name + " occupation: "; //creating a string with details
+                for (w in x.work) {
+                    details += " " + x.work.occupation;
+                }
+                //console.log(details);
+                if (name.includes("Z")) {
+                    console.log(name);
+                    db.collection("heros").add({
+                        name: x.name,
+                        details: details
+                    })
+                }
+            }
+        }
+
+        // function read_display_Quote() {
+        //     db.collection("quotes").doc(
+        //             "Tuesday"
+        //         ) //name of the collection and documents should matach excatly with what you have in Firestore
+        //         .onSnapshot(TuesdayDoc => { //
+        //             //console.log("current document data: " + TuesdayDoc.data()); //.data() returns data object
+        //             document.getElementById("quote-goes-here").innerHTML = TuesdayDoc.data()
+        //                 .quote; //using vanilla javascript
+        //         })
+        // }
+        //read_display_Quote()
+
+        function insertName() {
+            firebase.auth().onAuthStateChanged(user => {
+                // Check if user is signed in:
+                if (user) {
+                    // Do something for the current logged-in user here: 
+                    //console.log(user.uid);
+                    //go to the correct user document by referencing to the user uid
+                    currentUser = db.collection("users").doc(user.uid)
+                    //get the document for current user.
+                    currentUser.get()
+                        .then(userDoc => {
+                            var user_Name = userDoc.data().name;
+                            //console.log(user_Name);
+                            //document.getElementById("username").innerText = n;                     //using javascript
+                            $("#name-goes-here").text(user_Name); //using jquery
+                        })
+                } else {
+                    // No user is signed in.
+                }
+            });
+        }
+        insertName();
+
+        // function writeHikes() {
+        //     //define a variable for the collection you want to create in Firestore to populate data
+        //     var hikesRef = db.collection("Hikes");
+
+        //     hikesRef.add({
+        //         code: "BBY01",
+        //         name: "Burnaby Lake Park Trail", //replace with your own city?
+        //         city: "Burnaby",
+        //         province: "BC",
+        //         level: "easy",
+        //         length: "10 km",
+        //         length_time: "2h 33mm"
+        //     });
+        //     hikesRef.add({
+        //         code: "AM01",
+        //         name: "Buntzen Lake Trail Trail", //replace with your own city?
+        //         city: "Anmore",
+        //         province: "BC",
+        //         level: "moderate",
+        //         length: "10.5 km",
+        //         length_time: "3h 17mm"
+        //     });
+        //     hikesRef.add({
+        //         code: "NV01",
+        //         name: "Mount Seymoure Trail", //replace with your own city?
+        //         city: "North Vancouver",
+        //         province: "BC",
+        //         level: "hard",
+        //         length: "8.2 km",
+        //         length_time: "3h 20m"
+        //     });
+        // }
+
+
+        // function displayHikes() {
+        //     db.collection("Hikes").get()
+        //         .then(allHikes => {
+        //             allHikes.forEach(doc => {
+        //                 var hikeName = doc.data().name; //gets the name field
+        //                 var hikeID = doc.data().code; //gets the unique ID field
+        //                 document.getElementById(hikeID).innerText = hikeName;
+        //             })
+
+        //         })
+        // }
+        // displayHikes();
+
+
+        function setHikeData(id) {
+            localStorage.setItem('hikeID', id);
+        }
+
+        //------------------------------------------------------------------
+        // Read from firestore to get a collection of hikes (of variable length)
+        // Then for each hike in the list,
+        // create a new "card" from the "template"
+        // update thet title and text, and other ID's 
+        // attach it to the gallery div
+        //-------------------------------------------------------------------
+        function displayCards(collection) {
+            let CardTemplate = document.getElementById("CardTemplate");
+
+            db.collection(collection).get()
+                .then(snap => {
+                    var i = 1;
+                    snap.forEach(doc => { //iterate thru each doc
+                        var title = doc.data().name;
+                        var details = doc.data().details;
+                        let newcard = CardTemplate.content.cloneNode(true);
+
+                        //update title and text and image
+                        newcard.querySelector('.card-title').innerHTML = title;
+                        newcard.querySelector('.card-text').innerHTML = details;
+                        newcard.querySelector('.card-image').src = "./images/" + collection +
+                        ".jpg"; //hikes.jpg
+
+                        newcard.querySelector('.card-href').href = "details.html?collection="+collection+"?id=" + doc.id;    //firestore doc ID
+                        
+
+                        //give unique ids to all elements for future use
+                        newcard.querySelector('.card-title').setAttribute("id", "ctitle" + i);
+                        newcard.querySelector('.card-text').setAttribute("id", "ctext" + i);
+                        newcard.querySelector('.card-image').setAttribute("id", "cimage" + i);
+
+                        //attach to gallery
+                        document.getElementById(collection + "-go-here").appendChild(newcard);
+                    })
+                })
+        }
+
+        displayCards("hikes");
+        displayCards("heros");
+        displayCards("countries");
+        //displayCards("bikes");
+    </script>
+
+</body>
+
+</html>
